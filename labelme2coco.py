@@ -17,7 +17,6 @@ classname_to_id = {"stalk":1,
                    "spear":2,
                    "bar":3,
                    "straw":4,
-                    # }
                    "clump":5}
 
 class Lableme2CoCo:
@@ -57,8 +56,11 @@ class Lableme2CoCo:
 
     # 構建類別
     def _init_categories(self):
-        selected_classes = ["stalk", "spear"]
         if self.classes_num == 'two':
+            selected_classes = ["stalk", "spear"]
+            self.classname_to_id_selected = {k: v for k, v in classname_to_id.items() if k in selected_classes}
+        elif self.classes_num == "all_without_clump":
+            selected_classes = ["stalk", "spear", "straw", "bar"]
             self.classname_to_id_selected = {k: v for k, v in classname_to_id.items() if k in selected_classes}
         else:
             self.classname_to_id_selected = classname_to_id
@@ -126,44 +128,13 @@ class Lableme2CoCo:
         return [min_x, min_y, max_x - min_x, max_y - min_y]
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    # TODO
-    parser.add_argument('--classes', choices=['all', 'two'], default='two', help='選擇要轉換的類別項目:all (保留全部類別）或 two(保留spear和stalk兩類別)')
-    args = parser.parse_args()
-
-    #TODO: 原始資料檔案路徑，如有新增可以添加在這裡
-    # labelme_path = ["Adam_pseudo_label/202111_patrol",
-    #                 "Adam_pseudo_label/Justin_remain",
-    #                 "Justin_labeled_data/",
-    #                 "robot_regular_patrol/20210922_30",
-    #                 "robot_regular_patrol/20211102",
-    #                 "robot_regular_patrol/20211103",
-    #                 "robot_regular_patrol/20211122",
-    #                 "robot_regular_patrol/20211129",
-    #                 "robot_regular_patrol/20211130"]
-
-    # 1920*1080 version
-    labelme_path = ["Adam_pseudo_label/202111_patrol_1920",
-                    "Adam_pseudo_label/Justin_remain_1920",
-                    "Justin_labeled_data_1920",
-                    "robot_regular_patrol/20210922_30", # 本來就是1920*1080
-                    "robot_regular_patrol/20211102",
-                    "robot_regular_patrol/20211103",
-                    "robot_regular_patrol/20211122",
-                    "robot_regular_patrol/20211129",
-                    "robot_regular_patrol/20211130"]
-
-    # 小規模測試用(100多張)
-    # labelme_path = ["robot_regular_patrol/20211130"]
-
-    #TODO: 輸出資料夾位置，記得要修改新的資料集位置
-    saved_coco_path = "COCO_Format/20231018_dataset_with_straw_bar"
-    os.makedirs(saved_coco_path, exist_ok=True)
+def main(input_path, output_path=datetime.now().strftime("%Y%m%d_%H%M%S")):
+    output_path = os.path.join("COCO_Format", output_path)
+    os.makedirs(output_path, exist_ok=True)
 
     # 獲取images目錄下所有的json文件列表
     json_list_path = []
-    for path in labelme_path:
+    for path in input_path:
         path = Path(path)
         json_files = path.glob('*.json')
         linux_paths = [file_path.as_posix() for file_path in json_files]
@@ -197,20 +168,20 @@ def main():
 
 
     # 數據劃分 80:10:10，目前沒用了
-    # train_path, test_path = train_test_split(json_list_path, test_size=0.1)
+    # train_path_list, val_path_list = train_test_split(json_list_path, test_size=0.2)
     # train_path, val_path = train_test_split(train_path, test_size=0.1/0.9) # 維持比例，0.9中要保持原本的0.1部分
 
     def convert_train_set():
         l2c = Lableme2CoCo(classes=args.classes)
         print("Start to convert training set.")
         train_instance = l2c.to_coco(train_path_list)
-        l2c.save_coco_json(train_instance, f"{saved_coco_path}/instances_train2017.json")
+        l2c.save_coco_json(train_instance, f"{output_path}/instances_train2017.json")
 
     def convert_val_set():
         l2c = Lableme2CoCo(classes=args.classes)
         print("Start to convert val set.")
         val_instance = l2c.to_coco(val_path_list)
-        l2c.save_coco_json(val_instance, f"{saved_coco_path}/instances_val2017.json")
+        l2c.save_coco_json(val_instance, f"{output_path}/instances_val2017.json")
 
 
     # 創建多線程
@@ -229,4 +200,36 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--classes', choices=["all", "two", "all_without_clump"], default='two', help='選擇要轉換的類別項目:all (保留全部類別）或 two(保留spear和stalk兩類別)')
+    args = parser.parse_args()
+
+    #TODO: 原始資料檔案路徑，如有新增可以添加在這裡
+    # labelme_path = ["Adam_pseudo_label/202111_patrol",
+    #                 "Adam_pseudo_label/Justin_remain",
+    #                 "Justin_labeled_data/",
+    #                 "robot_regular_patrol/20210922_30",
+    #                 "robot_regular_patrol/20211102",
+    #                 "robot_regular_patrol/20211103",
+    #                 "robot_regular_patrol/20211122",
+    #                 "robot_regular_patrol/20211129",
+    #                 "robot_regular_patrol/20211130"]
+
+    # 1920*1080 version
+    labelme_path = ["Adam_pseudo_label/202111_patrol_1920",
+                    "Adam_pseudo_label/Justin_remain_1920",
+                    "Justin_labeled_data_1920",
+                    "robot_regular_patrol/20210922_30", # 本來就是1920*1080
+                    "robot_regular_patrol/20211102",
+                    "robot_regular_patrol/20211103",
+                    "robot_regular_patrol/20211122",
+                    "robot_regular_patrol/20211129",
+                    "robot_regular_patrol/20211130"]
+
+    # 小規模測試用(100多張)
+    # labelme_path = ["robot_regular_patrol/20211130"]
+
+
+    #TODO: 輸出資料夾位置，記得要修改新的資料集位置
+    output_folder_name = "20231213_test_"
+    main(labelme_path, output_folder_name)
