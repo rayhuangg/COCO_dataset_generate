@@ -18,7 +18,7 @@ if __name__ == "__main__":
     if not os.path.exists(dst_dir):
         os.makedirs(dst_dir)
 
-    # 先收集一下文件夾中圖片的格式列表，例如 ['.jpg', '.JPG']
+    # 收集文件夾中圖片的格式列表，例如 ['.jpg', '.JPG']
     exts = dict()
     filesnames = os.listdir(src_dir)
     for filename in filesnames:

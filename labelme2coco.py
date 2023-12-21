@@ -120,10 +120,11 @@ class Lableme2CoCo:
 
     # COCO的格式： [x1,y1,w,h] 對應COCO的bbox格式
     def _get_box(self, points):
-        min_x = np.min(points[:, 0])
-        min_y = np.min(points[:, 1])
-        max_x = np.max(points[:, 0])
-        max_y = np.max(points[:, 1])
+        points_array = np.array(points)
+        min_x = np.min(points_array[:, 0])
+        min_y = np.min(points_array[:, 1])
+        max_x = np.max(points_array[:, 0])
+        max_y = np.max(points_array[:, 1])
         return [min_x, min_y, max_x - min_x, max_y - min_y]
 
 
@@ -225,5 +226,5 @@ if __name__ == '__main__':
 
 
     #TODO: 輸出資料夾位置，記得要修改新的資料集位置
-    output_folder_name = "20231213_test_"
+    output_folder_name = "20231213_ValidationSet_0point1"
     main(labelme_path, output_folder_name)
