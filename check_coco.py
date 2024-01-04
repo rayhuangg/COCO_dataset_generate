@@ -1,6 +1,5 @@
-# 使用前要先cd到coco annotation資料夾
-
 import os
+from pathlib import Path
 import random
 from pycocotools.coco import COCO
 from skimage import io
@@ -10,8 +9,8 @@ matplotlib.use('QTAgg')  # 使用agg后端
 
 
 def check_coco(type="one"):
-    json_file = r"C:\NTU\Asparagus_Dataset\COCO_Format\20230726_Adam_ver_class2\instances_train2017.json"
-    json_file = r"C:\NTU\Asparagus_Dataset\COCO_Format\20231213_ValidationSet_0point1\instances_val2017.json"
+    dataset_name = "20231213_ValidationSet_0point1"
+    json_file = Path("COCO_Format") / dataset_name / "instances_train2017.json"
 
     coco = COCO(json_file)
     catIds = coco.getCatIds(catNms=['1','2','3','4','5']) # 不同數字表示不同类型别

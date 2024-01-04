@@ -3,10 +3,12 @@ Modify time: 20230724
 目前處理的檔案都是原始拍攝照片，沒有加入copy-paste硬寫進去的結果
 
 ## 轉檔使用方法
-`labelme2coco.py`: 指定需要轉換的原始資料路徑、輸出資料夾位置名稱，即可將labelme格式轉為coco資料集格式
+`labelme2coco.py`: 指定需要轉換的原始資料路徑、輸出資料夾位置名稱，輸出物件數量，即可將labelme格式轉為coco資料集格式
 `check_coco.py`, `pycocoDemo.ipynb`: 都是確認資料集正確性的工具
 `convert_labelme_to1920.py`: 將原始較高的圖片解析度降低為最長邊1920，標記與圖片一併修改，以減低模型evaluate難度，因輸入模型都還會再縮減尺吋(default=1333)
 `compress_dataset.bat`: windows bat檔案，將原始標記json檔案排除，只壓縮照片以及coco總label檔案，裡面的資料夾與輸出位置可以用文字編輯器編輯
+`analyze_coco_dataset.py`: 分析製作好的COCO資料集中，train/val照片與物件數量，計算相對應比例
+`extract_ValSet_data.py`: 提取出對應COCO資料集中的val照片到指定資料夾中，以便模型進行測試
 
 ---
 ## Dataset資料夾架構與內容說明:
