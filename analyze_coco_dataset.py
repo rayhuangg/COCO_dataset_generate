@@ -3,7 +3,7 @@ from pycocotools.coco import COCO
 
 def main():
     # Load the annotation files for the training and validation sets
-    dataset_name = "20231213_ValidationSet_0point1"
+    dataset_name = "20230817_Adam_1920"
     train_annotation_path = Path('COCO_Format') / dataset_name / 'instances_train2017.json'
     val_annotation_path = Path('COCO_Format') / dataset_name / 'instances_val2017.json'
 

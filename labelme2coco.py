@@ -1,5 +1,6 @@
 # ref https://github.com/spytensor/prepare_detection_dataset/blob/master/labelme2coco.py
 
+import math
 import os
 import json
 import threading
@@ -14,7 +15,7 @@ from sklearn.model_selection import train_test_split
 np.random.seed(11631026)
 random.seed(11631026)
 
-# 0為背景，不能使用
+# 0為背景，不要使用
 classname_to_id = {"stalk":1,
                    "spear":2,
                    "bar":3,
@@ -141,8 +142,8 @@ def main(input_path, output_path=datetime.now().strftime("%Y%m%d_%H%M%S")):
         json_files = list(path.glob('*.json'))
         num_files = len(json_files)
 
-        # 計算要分配到驗證集的檔案數量
-        num_validation_files = int(num_files * validation_ratio)
+        # 計算要分配到驗證集的檔案數量，無條件進位避免驗證集少太多張
+        num_validation_files = math.ceil(num_files * validation_ratio)
 
         # 隨機選擇檔案加入驗證集
         validation_files = random.sample(json_files, num_validation_files)
@@ -179,15 +180,15 @@ def main(input_path, output_path=datetime.now().strftime("%Y%m%d_%H%M%S")):
         l2c.save_coco_json(val_instance, f"{output_path}/instances_val2017.json")
 
 
-    # 創建多線程
+    # 創建多執行續
     train_thread = threading.Thread(target=convert_train_set)
     val_thread = threading.Thread(target=convert_val_set)
 
-    # 啟動線程
+    # 啟動執行續
     train_thread.start()
     val_thread.start()
 
-    # 等待線程结束
+    # 等待執行續结束
     train_thread.join()
     val_thread.join()
 
@@ -219,12 +220,22 @@ if __name__ == '__main__':
                     "robot_regular_patrol/20211103",
                     "robot_regular_patrol/20211122",
                     "robot_regular_patrol/20211129",
-                    "robot_regular_patrol/20211130"]
+                    "robot_regular_patrol/20211130",
+                    "RayHuang_label\Joan_support\20231026_business_trip_clean"]
 
     # 小規模測試用(100多張)
     # labelme_path = ["robot_regular_patrol/20211130"]
 
+    # 要被遍歷的母資料夾，一併加入labelme_path中
+    iter_folders = ["RayHuang_label\Pseudo_patrol_0207ver"]
+    for iter_folder in iter_folders:
+        subfolders = [f for f in Path(iter_folder).iterdir() if f.is_dir()]
+        for subfolder in subfolders:
+            labelme_path.append(str(subfolder))
+
+    print(labelme_path)
+
 
     #TODO: 輸出資料夾位置，記得要修改新的資料集位置
-    output_folder_name = "20231213_ValidationSet_0point1"
+    output_folder_name = "20240208_Add2021PatrolData_6000pic"
     main(labelme_path, output_folder_name)
