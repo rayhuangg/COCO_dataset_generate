@@ -3,7 +3,8 @@ from pycocotools.coco import COCO
 
 def main():
     # Load the annotation files for the training and validation sets
-    dataset_name = "20230817_Adam_1920"
+    dataset_name = "20240208_Add2021PatrolData_6000pic"
+    print(f"\n{dataset_name = }")
     train_annotation_path = Path('COCO_Format') / dataset_name / 'instances_train2017.json'
     val_annotation_path = Path('COCO_Format') / dataset_name / 'instances_val2017.json'
 
@@ -43,7 +44,7 @@ def main():
     ratio_stalk_val = num_instances_stalk_val / num_instances_spear_val if num_instances_spear_val != 0 else float('inf')
 
     # Display the results
-    print("\nResults Summary:")
+    print("Results Summary:")
     print(f"  Number of images in the training set: {num_train_images}")
     print(f"  Number of images in the validation set: {num_val_images}")
     print(f"  Image ratio (training:validation): {image_ratio:0.2f}:1\n")

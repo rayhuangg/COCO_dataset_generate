@@ -199,6 +199,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--classes', choices=["all", "two", "all_without_clump"], default='two', help='選擇要轉換的類別項目:all (保留全部類別）或 two(保留spear和stalk兩類別)')
     args = parser.parse_args()
+    labelme_path = []
 
     #TODO: 原始資料檔案路徑，如有新增可以添加在這裡
     # labelme_path = ["Adam_pseudo_label/202111_patrol",
