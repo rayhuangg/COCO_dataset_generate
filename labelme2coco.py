@@ -4,13 +4,13 @@ import math
 import os
 import json
 import threading
-import argparse
+import yaml
 import random
 import numpy as np
 from pathlib import Path
 from datetime import datetime
+from typing import List
 from tqdm import tqdm
-from sklearn.model_selection import train_test_split
 
 np.random.seed(11631026)
 random.seed(11631026)
@@ -129,114 +129,105 @@ class Lableme2CoCo:
         return [min_x, min_y, max_x - min_x, max_y - min_y]
 
 
-def main(input_path, output_path=datetime.now().strftime("%Y%m%d_%H%M%S")):
-    output_path = os.path.join("COCO_Format", output_path)
+def convert_train_set(train_path_list: List[str], output_path: str, label_classes):
+    l2c = Lableme2CoCo(classes=label_classes)
+    print("Start to convert training set.")
+    with open(f"{output_path}/train_path_list.txt", "w") as file:
+        for path in train_path_list:
+            file.write(f"{path}\n")
+    train_instance = l2c.to_coco(train_path_list)
+    l2c.save_coco_json(train_instance, f"{output_path}/instances_train2017.json")
+
+
+def convert_val_set(val_path_list: List[str], output_path: str, label_classes):
+    l2c = Lableme2CoCo(classes=label_classes)
+    print("Start to convert val set.")
+    with open(f"{output_path}/val_path_list.txt", "w") as file:
+        for path in val_path_list:
+            file.write(f"{path}\n")
+    val_instance = l2c.to_coco(val_path_list)
+    l2c.save_coco_json(val_instance, f"{output_path}/instances_val2017.json")
+
+
+def main(input_path: List[str],
+         output_folder_name: str = datetime.now().strftime("%Y%m%d_%H%M%S"),
+         convert_type: str = "both",
+         label_classes: str = "two"
+         ):
+
+    output_path = os.path.join("COCO_Format", output_folder_name)
     os.makedirs(output_path, exist_ok=True)
 
     train_path_list = []
     val_path_list = []
     validation_ratio = 0.1
 
+    # Generate train/val file list
     for path in input_path:
+        if not os.path.exists(path):
+            raise ValueError(f"Invalid input path: {path}")
         path = Path(path)
-        json_files = list(path.glob('*.json'))
-        num_files = len(json_files)
+        json_files = list(path.glob("*.json"))
 
-        # 計算要分配到驗證集的檔案數量，無條件進位避免驗證集少太多張
-        num_validation_files = math.ceil(num_files * validation_ratio)
-
-        # 隨機選擇檔案加入驗證集
-        validation_files = random.sample(json_files, num_validation_files)
-
-        # 將其餘的檔案加入訓練集
-        train_files = [file_path for file_path in json_files if file_path not in validation_files]
-
-        # 將路徑轉換為字串
-        train_paths = [file_path.as_posix() for file_path in train_files]
-        validation_paths = [file_path.as_posix() for file_path in validation_files]
-
-        # 將檔案路徑加入對應的集合
-        train_path_list.extend(train_paths)
-        val_path_list.extend(validation_paths)
-
-    print("train_number:", len(train_path_list), 'val_number:', len(val_path_list))
-
-    def convert_train_set():
-        l2c = Lableme2CoCo(classes=args.classes)
-        print("Start to convert training set.")
-        with open(f"{output_path}/train_path_list.txt", "w") as file:
-            for path in train_path_list:
-                file.write(f"{path}\n")
-        train_instance = l2c.to_coco(train_path_list)
-        l2c.save_coco_json(train_instance, f"{output_path}/instances_train2017.json")
-
-    def convert_val_set():
-        l2c = Lableme2CoCo(classes=args.classes)
-        print("Start to convert val set.")
-        with open(f"{output_path}/val_path_list.txt", "w") as file:
-            for path in val_path_list:
-                file.write(f"{path}\n")
-        val_instance = l2c.to_coco(val_path_list)
-        l2c.save_coco_json(val_instance, f"{output_path}/instances_val2017.json")
+        if convert_type == "only_train":
+            train_path_list.extend([str(file_path.as_posix()) for file_path in json_files])
+        elif convert_type == "only_val":
+            val_path_list.extend([str(file_path.as_posix()) for file_path in json_files])
+        elif convert_type == "both":
+            num_files = len(json_files)
+            num_validation_files = math.ceil(num_files * validation_ratio)
+            validation_files = random.sample(json_files, num_validation_files)
+            train_files = [file_path for file_path in json_files if file_path not in validation_files]
+            train_path_list.extend([str(file_path.as_posix()) for file_path in train_files])
+            val_path_list.extend([str(file_path.as_posix()) for file_path in validation_files])
 
 
-    # 創建多執行續
-    train_thread = threading.Thread(target=convert_train_set)
-    val_thread = threading.Thread(target=convert_val_set)
+    if convert_type == "only_train":
+        print("train_number:", len(train_path_list))
+        convert_train_set(train_path_list, output_path, label_classes)
+        print("Training set amount:", len(train_path_list))
+    elif convert_type == "only_val":
+        print("Validation set amount:", len(train_path_list))
+        convert_val_set(val_path_list, output_path, label_classes)
+        print("valadition set conversions completed.")
+    elif convert_type == "both":
+        print("Training set amount:", len(train_path_list), "Validation set amount:", len(val_path_list))
+        train_thread = threading.Thread(target=convert_train_set, args=(train_path_list, output_path, label_classes))
+        val_thread = threading.Thread(target=convert_val_set, args=(val_path_list, output_path, label_classes))
+        train_thread.start()
+        val_thread.start()
+        train_thread.join()
+        val_thread.join()
+        print("Both conversions completed.")
 
-    # 啟動執行續
-    train_thread.start()
-    val_thread.start()
+if __name__ == "__main__":
 
-    # 等待執行續结束
-    train_thread.join()
-    val_thread.join()
+    with open("labelme2coco_config.yaml") as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
 
-    print("Both conversions completed.")
+    single_folders = config["input"]["single_folder"]
+    iter_folders = config["input"]["iter_folder"]
+    output_folder_name = config["output_folder_name"]
+    convert_type = config["convert_type"]
+    label_classes = config["label_classes"]
 
+    if not isinstance(output_folder_name, str):
+        raise ValueError("output_folder_name must be a string")
+    if convert_type not in ["both", "only_train", "only_val"]:
+        raise ValueError(f"Invalid convert_type: {convert_type}. Valid values are 'both', 'only_train', 'only_val'.")
+    if label_classes not in ["all", "two", "all_without_clump"]:
+        raise ValueError(f"Invalid label_classes: {label_classes}. Valid values are 'all', 'two', 'all_without_clump'.")
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--classes', choices=["all", "two", "all_without_clump"], default='two', help='選擇要轉換的類別項目:all (保留全部類別）或 two(保留spear和stalk兩類別)')
-    args = parser.parse_args()
     labelme_path = []
 
-    #TODO: 原始資料檔案路徑，如有新增可以添加在這裡
-    # labelme_path = ["Adam_pseudo_label/202111_patrol",
-    #                 "Adam_pseudo_label/Justin_remain",
-    #                 "Justin_labeled_data/",
-    #                 "robot_regular_patrol/20210922_30",
-    #                 "robot_regular_patrol/20211102",
-    #                 "robot_regular_patrol/20211103",
-    #                 "robot_regular_patrol/20211122",
-    #                 "robot_regular_patrol/20211129",
-    #                 "robot_regular_patrol/20211130"]
+    if single_folders:
+        for single_folder in single_folders:
+            labelme_path.append(single_folder)
+    if iter_folders:
+        for iter_folder in iter_folders:
+            subfolders = [f for f in Path(iter_folder).iterdir() if f.is_dir()]
+            labelme_path.extend([str(subfolder) for subfolder in subfolders])
 
-    # 1920*1080 version
-    labelme_path = ["Adam_pseudo_label/202111_patrol_1920",
-                    "Adam_pseudo_label/Justin_remain_1920",
-                    "Justin_labeled_data_1920",
-                    "robot_regular_patrol/20210922_30", # 本來就是1920*1080
-                    "robot_regular_patrol/20211102",
-                    "robot_regular_patrol/20211103",
-                    "robot_regular_patrol/20211122",
-                    "robot_regular_patrol/20211129",
-                    "robot_regular_patrol/20211130",
-                    "RayHuang_label\Joan_support\20231026_business_trip_clean"]
+    print(f"{labelme_path=}")
 
-    # 小規模測試用(100多張)
-    # labelme_path = ["robot_regular_patrol/20211130"]
-
-    # 要被遍歷的母資料夾，一併加入labelme_path中
-    iter_folders = ["RayHuang_label\Pseudo_patrol_0207ver"]
-    for iter_folder in iter_folders:
-        subfolders = [f for f in Path(iter_folder).iterdir() if f.is_dir()]
-        for subfolder in subfolders:
-            labelme_path.append(str(subfolder))
-
-    print(labelme_path)
-
-
-    #TODO: 輸出資料夾位置，記得要修改新的資料集位置
-    output_folder_name = "20240208_Add2021PatrolData_6000pic"
-    main(labelme_path, output_folder_name)
+    main(labelme_path, output_folder_name, convert_type, label_classes)
