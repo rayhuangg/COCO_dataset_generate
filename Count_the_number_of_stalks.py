@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 # 存储统计结果的列表
 results = []
-directory = r"D:\NTU\研究相關\Dataset\蘆筍dataset\訓練用\第一次訓練資料集\train_copy"
+directory = r"D:\NTU\DATASET_2021_remain\Pseudo_patrol_2021remain\json\20210812_20240605_105323_R50_high_density_improve_1k"
 
 def custom_sort(filename):
     # 检查文件类型
@@ -23,7 +23,9 @@ def custom_sort(filename):
         return (3, filename)
 
 # 遍历所有的json文件
-for filename in tqdm(sorted(os.listdir(directory), key=custom_sort)):
+# for filename in tqdm(sorted(os.listdir(directory), key=custom_sort)):
+for filename in tqdm(sorted(os.listdir(directory))):
+
     if filename.endswith('.json'):
         with open(os.path.join(directory, filename), 'r') as f:
             data = json.load(f)
@@ -38,10 +40,10 @@ for filename in tqdm(sorted(os.listdir(directory), key=custom_sort)):
                 spear_count += 1
 
         # 将文件名和stalk数量加入列表
-        results.append([filename[:-5], stalk_count, spear_count])
+        results.append([filename[:-5], spear_count, stalk_count])
 
 # 将结果写入csv文件
 with open('stalk_spear_count_copy.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
-    writer.writerow(['filename', 'stalk count', 'spear count'])
+    writer.writerow(['filename', 'spear count', 'stalk count'])
     writer.writerows(results)

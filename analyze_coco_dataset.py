@@ -1,9 +1,11 @@
 from pathlib import Path
 from pycocotools.coco import COCO
+import pandas as pd
+from collections import defaultdict
 
 def main():
     # Load the annotation files for the training and validation sets
-    dataset_name = "20240208_Add2021PatrolData_6000pic"
+    dataset_name = "20240605_only_high_density_train"
     print(f"\n{dataset_name = }")
     train_annotation_path = Path('COCO_Format') / dataset_name / 'instances_train2017.json'
     val_annotation_path = Path('COCO_Format') / dataset_name / 'instances_val2017.json'
@@ -25,6 +27,7 @@ def main():
     num_instances_val = [len(coco_val.getAnnIds(catIds=cat_id)) for cat_id in val_cat_ids]
 
     # Find the indices of 'stalk' and 'spear' in the category IDs
+
     stalk_index_train = train_cat_ids.index(coco_train.getCatIds(catNms=['stalk'])[0])
     spear_index_train = train_cat_ids.index(coco_train.getCatIds(catNms=['spear'])[0])
 
@@ -66,6 +69,43 @@ def main():
     print(f"  Ratio of 'stalk' to 'spear' instances in the TRAINING set: {ratio_stalk_train:.2f}:1")
     print(f"  Ratio of 'stalk' to 'spear' instances in the VALIDATION set: {ratio_stalk_val:.2f}:1")
 
+    # Function to extract and count categories per image
+    def get_category_counts(coco, category_name):
+        cat_ids = coco.getCatIds(catNms=[category_name])
+        ann_ids = coco.getAnnIds(catIds=cat_ids)
+        anns = coco.loadAnns(ann_ids)
+        img_category_count = defaultdict(int)
+        for ann in anns:
+            img_category_count[ann['image_id']] += 1
+        return img_category_count
+
+    # Get counts for 'spear' and 'stalk' for each image in training and validation sets
+    train_stalk_counts = get_category_counts(coco_train, 'stalk')
+    train_spear_counts = get_category_counts(coco_train, 'spear')
+    val_stalk_counts = get_category_counts(coco_val, 'stalk')
+    val_spear_counts = get_category_counts(coco_val, 'spear')
+
+    # Function to create DataFrame from counts
+    def create_dataframe(img_ids, spear_counts, stalk_counts, coco):
+        data = []
+        for img_id in img_ids:
+            filename = coco.imgs[img_id]['file_name']
+            data.append({
+                'Image ID': img_id,
+                'File Name': filename,
+                'Spear Count': spear_counts.get(img_id, 0),
+                'Stalk Count': stalk_counts.get(img_id, 0)
+            })
+        return pd.DataFrame(data)
+
+    # Create DataFrames
+    train_df = create_dataframe(coco_train.getImgIds(), train_spear_counts, train_stalk_counts, coco_train)
+    val_df = create_dataframe(coco_val.getImgIds(), val_spear_counts, val_stalk_counts, coco_val)
+
+    # Save to Excel
+    train_df.to_excel('spear_stalk_count_train.xlsx', index=False)
+    val_df.to_excel('spear_stalk_count_val.xlsx', index=False)
+    print("\nExcel files generated: spear_stalk_count_train.xlsx and spear_stalk_count_val.xlsx")
 
 
 if __name__ == "__main__":
