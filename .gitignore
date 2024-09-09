@@ -5,4 +5,9 @@
 *.JPEG
 *.txt
 *.lnk
+*.csv
+*.xlsx
+*.sh
 sync.ffs_db
+*.yaml
+!*_sample.yaml
