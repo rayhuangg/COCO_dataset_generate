@@ -1,4 +1,5 @@
 # ref https://github.com/spytensor/prepare_detection_dataset/blob/master/labelme2coco.py
+# TODO: add feature: json and jpg can be in different folders
 
 import math
 import os

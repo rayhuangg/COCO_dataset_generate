@@ -1,0 +1,15 @@
+input:
+  single_folder:
+  - High_density\20230704\PriorityLable_1920\checked
+  - RayHuang_label\Joan_support\20231026_business_trip_clean
+  iter_folder:
+  - robot_regular_patrol
+  - RayHuang_label\Pseudo_patrol_0207ver
+
+output_folder_name: '20240417_2021_5k_with_high_density'
+
+# "both", "only_train", "only_val"
+convert_type: both
+
+# "all", "two", "all_without_clump"
+label_classes: two
