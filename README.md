@@ -1,4 +1,4 @@
-用途：轉檔Labelme標記的Instanse Segmentation格式，輸出為CoCo Dataset資料集格式，以符合Detectron2的資料註冊方法
+用途：轉檔Labelme標記的Instanse Segmentation格式，輸出為coco dataset資料集格式，以符合Detectron2的資料註冊方法
 
 
 ## 轉檔機制設計核心想法
@@ -48,26 +48,5 @@ python3 extract_ValSet_data.py \
     --img_source_folder "./" \
     --extract_type "json"
 ```
-
-
-## Dataset資料夾架構與內容說明:
-
-```
-Adam_pseudo_label: 。世鈺進行的pseudo label標註，共705張
-	|__ 202111_patrol: (164張)。11月農民遙控載具拍攝，
-	|__ justin_remain: (541張)。熊哥時期拍攝影像，從2021 11月影像挑出來標記，感覺應該有篩選過了
-
-COCO_Format: 依據資料夾存放各個時期的coco annotation.json，不儲存原始影像與標記檔案
-
-Justin_labeled_data: (1026張)。熊哥標註的檔案
-
-Justin_unlabeled_data: (1077張)。熊哥未標註照片，都被挑選過了，剩下的可能是沒那麼代表性的照片，優先度低
-
-robot_regular_patrol: 農民遙控車輛定期拍攝的結果
-	|__ 202111_unlabel: (316張)。已經都被挑選過了，剩下的可能是沒那麼代表性的照片，優先度低
-	|__ 20210922_30: (241張)。懷樂同學標記
-	|__ 2021102,03,22...30: (480張)。廷睿煒翔協助世鈺標記
-```
-
 
 註: 目前處理的檔案都是原始拍攝照片，沒有加入copy-paste硬寫進去的結果
