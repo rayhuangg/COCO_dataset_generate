@@ -1,8 +1,9 @@
-from pathlib import Path
 import shutil
+import argparse
+from pathlib import Path
 from pycocotools.coco import COCO
 
-def copy_coco_val_data(COCO_source_folder, IMG_source_folder, destination_folder, dataset_name, extract_type):
+def copy_coco_val_data(dataset_name, COCO_source_folder, IMG_source_folder, destination_folder, extract_type):
     # Load COCO validation set annotations
     val_annotation_path = Path(COCO_source_folder) / dataset_name / 'instances_val2017.json'
     coco_val = COCO(val_annotation_path)
@@ -31,10 +32,13 @@ def copy_coco_val_data(COCO_source_folder, IMG_source_folder, destination_folder
             shutil.copyfile(source_ann_path, destination_ann_path)
 
 if __name__ == "__main__":
-    dataset_name = "20231213_ValidationSet_0point1"
-    COCO_source_folder = 'COCO_Format'
-    IMG_source_folder = "./"
-    destination_folder = f'val_set_extract/{dataset_name}'
-    extract_type = ["photo"] # or ["photo", "json"]
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('-n', '--dataset_Name', type=str, default="20231213_ValidationSet_0point1", help='Name of the dataset folder to be analyzed')
+    parser.add_argument('--coco_json_folder', type=str, default='COCO_Format', help='Path to COCO json file source folder')
+    parser.add_argument('--img_source_folder', type=str, default="./", help='Path to image source folder')
+    parser.add_argument('--extract_type', nargs='+', default="photo", help='Types of data to extract, photo or json')
 
-    copy_coco_val_data(COCO_source_folder, IMG_source_folder, destination_folder, dataset_name, extract_type)
+    args = parser.parse_args()
+
+    destination_folder = f'val_set_extract/{args.dataset_Name}'
+    copy_coco_val_data(args.dataset_Name, args.coco_json_folder, args.img_source_folder, destination_folder, args.extract_type)
